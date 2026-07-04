@@ -1,0 +1,15 @@
+{
+  "name": "मेरा पहला प्रो गेम ऐप",
+  "short_name": "Pro Game App",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#00adb5",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/686/686589.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
