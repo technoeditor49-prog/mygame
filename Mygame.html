@@ -5,22 +5,64 @@
     <!-- पटाखों (Confetti) के लिए लाइब्रेरी -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* टिक-टैक-टो के खानों का स्टाइल */
+        /* डार्क और लाइट मोड के लिए थीम वैरियेबल्स */
+        :root {
+            --bg-body: #121212;
+            --bg-app: #1e1e1e;
+            --text-main: #ffffff;
+            --text-sub: #888888;
+            --bg-card: #2d2d2d;
+            --bg-zone: #252525;
+        }
+
+        .light-theme {
+            --bg-body: #f0f2f5;
+            --bg-app: #ffffff;
+            --text-main: #1a1a1a;
+            --text-sub: #65676b;
+            --bg-card: #e4e6eb;
+            --bg-zone: #f7f8fa;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .app-container {
+            background-color: var(--bg-app);
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            transition: background 0.3s, color 0.3s;
+        }
+
         .cell {
             width: 80px;
             height: 80px;
-            background-color: #1e1e1e;
+            background-color: var(--bg-body);
             border: 2px solid #ff2e63;
             border-radius: 10px;
             font-size: 32px;
             font-weight: bold;
-            color: white;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
         }
-        /* स्नेक गेम की स्क्रीन का स्टाइल */
+
         #snakeCanvas {
             background-color: #050505;
             border: 2px solid #ffcc00;
@@ -28,10 +70,10 @@
             margin: 0 auto;
             border-radius: 10px;
         }
-        /* स्नेक गेम के बटनों का स्टाइल */
+
         .arrow-btn {
-            background-color: #2d2d2d;
-            color: white;
+            background-color: var(--bg-card);
+            color: var(--text-main);
             border: 1px solid #ffcc00;
             padding: 12px 20px;
             font-size: 18px;
@@ -40,55 +82,61 @@
             cursor: pointer;
             margin: 3px;
         }
+
+        .game-card {
+            background-color: var(--bg-card);
+            padding: 12px 5px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
     </style>
 </head>
-<body style="background-color: #121212; font-family: sans-serif; margin: 0; padding: 0; color: white; display: flex; justify-content: center;">
+<body>
 
     <!-- मोबाइल ऐप की स्क्रीन का डिब्बा -->
-    <div style="background-color: #1e1e1e; width: 100%; max-width: 400px; height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); padding: 20px; box-sizing: border-box; overflow-y: auto;">
+    <div class="app-container" id="appContainer">
         
-        <!-- ऐप का ऊपरी हिस्सा (Header) -->
+        <!-- ऐप का ऊपरी हिस्सा (Header) और डार्क मोड बटन -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
             <div>
-                <p style="margin: 0; color: #888; font-size: 14px;">नमस्ते,</p>
+                <p style="margin: 0; color: var(--text-sub); font-size: 14px;">नमस्ते,</p>
                 <h2 style="margin: 0; font-size: 22px; color: #00adb5;">अभिनंदन 🚀</h2>
             </div>
-            <div style="background-color: #2d2d2d; padding: 8px 15px; border-radius: 20px; font-size: 12px; color: #00adb5; font-weight: bold;">
-                PRO DEV
-            </div>
+            <!-- थीम बदलने का बटन -->
+            <button onclick="toggleTheme()" id="themeBtn" style="background-color: #00adb5; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 14px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                ☀️ लाइट मोड
+            </button>
         </div>
 
         <!-- ऐप का मुख्य बैनर -->
-        <div style="background-color: #00adb5; padding: 20px; border-radius: 15px; margin-top: 25px; box-shadow: 0 4px 15px rgba(0, 173, 181, 0.3);">
+        <div style="background-color: #00adb5; padding: 20px; border-radius: 15px; margin-top: 25px; box-shadow: 0 4px 15px rgba(0, 173, 181, 0.3); color: white;">
             <h3 style="margin: 0; font-size: 18px;">मेरा मिशन: ऐप डेवलपर बनना</h3>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #e3fafc; opacity: 0.9;">3 मज़ेदार गेम्स अब लाइव हैं। गेमिंग हब तैयार है!</p>
+            <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">डार्क/लाइट मोड के साथ 3 मज़ेدار गेम्स लाइव हैं!</p>
         </div>
 
-        <h3 style="margin-top: 30px; font-size: 16px; color: #888;">गेम्स मेन्यू (Select Game)</h3>
+        <h3 style="margin-top: 30px; font-size: 16px; color: var(--text-sub);">गेम्स मेन्यू (Select Game)</h3>
 
-        <!-- ऐप के तीन बटन जो अलग-अलग गेम खोलेंगे -->
+        <!-- ऐप के तीन बटन -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;">
-            <!-- बटन 1: Tic-Tac-Toe -->
-            <div onclick="showTicTacToe()" style="background-color: #2d2d2d; padding: 12px 5px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #ff2e63;">
+            <div onclick="showTicTacToe()" class="game-card" style="border: 1px solid #ff2e63;">
                 <span style="font-size: 20px;">❌⭕</span>
                 <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #ff2e63;">Tic-Tac</p>
             </div>
 
-            <!-- बटन 2: नंबर चैलेंज -->
-            <div onclick="showGameZone()" style="background-color: #2d2d2d; padding: 12px 5px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #00adb5;">
+            <div onclick="showGameZone()" class="game-card" style="border: 1px solid #00adb5;">
                 <span style="font-size: 20px;">🎮</span>
                 <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #00adb5;">नंबर चैलेंज</p>
             </div>
 
-            <!-- बटन 3: साँप वाला खेल (Snake Game) -->
-            <div onclick="showSnakeGame()" style="background-color: #2d2d2d; padding: 12px 5px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #ffcc00;">
+            <div onclick="showSnakeGame()" class="game-card" style="border: 1px solid #ffcc00;">
                 <span style="font-size: 20px;">🐍</span>
                 <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #ffcc00;">स्नेक गेम</p>
             </div>
         </div>
 
         <!-- 🔽 गेम 1: Tic-Tac-Toe ज़ोन 🔽 -->
-        <div id="ticTacToeZone" style="display: none; background-color: #252525; margin-top: 25px; padding: 20px; border-radius: 15px; border: 2px dashed #ff2e63; text-align: center;">
+        <div id="ticTacToeZone" style="display: none; background-color: var(--bg-zone); margin-top: 25px; padding: 20px; border-radius: 15px; border: 2px dashed #ff2e63; text-align: center;">
             <h3 style="color: #ff2e63; margin: 0; font-size: 20px;">❌ Tic-Tac-Toe ⭕</h3>
             <p id="turnText" style="font-size: 14px; color: #ffcc00; margin-top: 10px; font-weight: bold;">बारी: प्लेयर X</p>
             
@@ -109,30 +157,28 @@
         </div>
 
         <!-- 🔽 गेम 2: नंबर चैलेंज ज़ोन 🔽 -->
-        <div id="gameZone" style="display: none; background-color: #252525; margin-top: 25px; padding: 20px; border-radius: 15px; border: 2px dashed #00adb5; text-align: center;">
+        <div id="gameZone" style="display: none; background-color: var(--bg-zone); margin-top: 25px; padding: 20px; border-radius: 15px; border: 2px dashed #00adb5; text-align: center;">
             <h3 style="color: #00adb5; margin: 0; font-size: 20px;">🎮 नंबर चैलेंज (1-100)</h3>
             <p id="livesLeft" style="font-size: 14px; color: #ffcc00; margin-top: 10px; font-weight: bold;">बचे हुए चांस: ❤️ 7</p>
             
-            <input type="number" id="userGuess" placeholder="1 से 100 के बीच लिखें" style="width: 80%; padding: 10px; margin-top: 10px; border-radius: 8px; border: none; text-align: center; font-size: 16px; color: black;">
+            <input type="number" id="userGuess" placeholder="1 से 100 के बीच लिखें" style="width: 80%; padding: 10px; margin-top: 10px; border-radius: 8px; border: none; text-align: center; font-size: 16px; color: black; background-color: white;">
             
             <button id="checkBtn" onclick="checkGuess()" style="background-color: #00adb5; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 14px; width: 85%;">जवाब चेक करें 🤔</button>
             
-            <p id="gameResult" style="font-size: 15px; font-weight: bold; margin-top: 15px; color: #fff; min-height: 40px;"></p>
+            <p id="gameResult" style="font-size: 15px; font-weight: bold; margin-top: 15px; color: var(--text-main); min-height: 40px;"></p>
             
             <button id="restartBtn" onclick="resetGame()" style="display: none; background-color: #00adb5; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 85%;">फिर से खेलें 🔄</button>
             
             <button onclick="hideGameZone()" style="background-color: #444; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-top: 15px; width: 100%;">खेल बंद करें</button>
         </div>
 
-        <!-- 🔽 गेम 3: स्नेक गेम ज़ोन (नया खेल) 🔽 -->
-        <div id="snakeZone" style="display: none; background-color: #252525; margin-top: 25px; padding: 20px; border-radius: 15px; border: 2px dashed #ffcc00; text-align: center;">
+        <!-- 🔽 गेम 3: स्नेक गेम ज़ोन 🔽 -->
+        <div id="snakeZone" style="display: none; background-color: var(--bg-zone); margin-top: 25px; padding: 20px; border-radius: 15px; border: 2px dashed #ffcc00; text-align: center;">
             <h3 style="color: #ffcc00; margin: 0; font-size: 20px;">🐍 साँप वाला खेल</h3>
-            <p id="snakeScore" style="font-size: 14px; color: #fff; margin-top: 5px; font-weight: bold;">स्कोर: 0</p>
+            <p id="snakeScore" style="font-size: 14px; color: var(--text-main); margin-top: 5px; font-weight: bold;">स्कोर: 0</p>
             
-            <!-- गेम खेलने की काली स्क्रीन -->
             <canvas id="snakeCanvas" width="240" height="240"></canvas>
             
-            <!-- कंट्रोल करने के बटन -->
             <div style="margin-top: 15px; text-align: center;">
                 <button class="arrow-btn" onclick="changeDir('UP')">⬆️</button><br>
                 <button class="arrow-btn" onclick="changeDir('LEFT')">⬅️</button>
@@ -152,20 +198,32 @@
 
     </div>
 
-    <!-- 🧠 जावास्क्रिप्ट लॉजिक तीनों गेम्स के लिए 🧠 -->
     <script>
+        // --- डार्क/लाइट मोड का लॉजिक ---
+        function toggleTheme() {
+            const container = document.getElementById("appContainer");
+            const btn = document.getElementById("themeBtn");
+            container.classList.toggle("light-theme");
+            
+            if(container.classList.contains("light-theme")) {
+                btn.innerText = "🌙 डार्क मोड";
+                btn.style.backgroundColor = "#2d2d2d";
+            } else {
+                btn.innerText = "☀️ लाइट मोड";
+                btn.style.backgroundColor = "#00adb5";
+            }
+        }
+
         // --- गेम 1: Tic-Tac-Toe का लॉजिक ---
         let board = ["", "", "", "", "", "", "", "", ""];
-        let currentPlayer = "X";
-        let isGameActive = true;
+        let currentPlayer = "X"; let isGameActive = true;
         const winningConditions = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 
         function showTicTacToe() {
             document.getElementById("ticTacToeZone").style.display = "block";
             document.getElementById("gameZone").style.display = "none";
             document.getElementById("snakeZone").style.display = "none";
-            stopSnakeGame();
-            resetTicTacToe();
+            stopSnakeGame(); resetTicTacToe();
         }
         function hideTicTacToe() { document.getElementById("ticTacToeZone").style.display = "none"; }
 
@@ -287,10 +345,9 @@
 
             let newHead = { x: snakeX, y: snakeY };
 
-            // दीवार या खुद से टकराने पर गेम ओवर
             if(snakeX < 0 || snakeX >= 240 || snakeY < 0 || snakeY >= 240 || collision(newHead, snake)) {
                 stopSnakeGame();
-                alert("💥 गेम ओवर अभिनंदन! आपका स्कोर: " + score + "\nफिर से खेलने के लिए स्नेक बटन दबाएं।");
+                alert("💥 गेम ओवर अभिनंदन! आपका स्कोर: " + score + "\nफिर से खेलने के लिए स्नेक गेम दोबारा खोलें।");
                 return;
             }
             snake.unshift(newHead);
