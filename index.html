@@ -41,10 +41,15 @@
     }
     .container { width: 90%; max-width: 450px; display: flex; flex-direction: column; align-items: center; }
     .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; }
-    .theme-btn {
-      background-color: var(--btn-bg); color: var(--btn-text); border: none; padding: 10px 18px;
-      border-radius: 25px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    
+    /* बटन स्टाइल */
+    .btn-group { display: flex; gap: 8px; }
+    .theme-btn, .sound-toggle-btn {
+      background-color: var(--btn-bg); color: var(--btn-text); border: none; padding: 10px 14px;
+      border-radius: 25px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 0.85rem;
     }
+    .sound-toggle-btn { background-color: #10b981; color: white; }
+
     .mission-box {
       width: 100%; background: linear-gradient(135deg, #38bdf8, #0369a1); color: white;
       padding: 20px; border-radius: 20px; margin-top: 20px; box-shadow: 0 10px 20px rgba(3, 105, 161, 0.3); box-sizing: border-box;
@@ -106,19 +111,24 @@
 </head>
 <body>
 
+  <!-- स्प्लैश स्क्रीन -->
   <div id="splash-screen"><div class="splash-text">🚀 Pro Game</div></div>
 
+  <!-- मुख्य मेन्यू -->
   <div class="container" id="main-menu">
     <div class="header">
       <div class="game-logo">
         <span class="logo-icon">🎮</span>
         <span class="logo-text">PRO<span style="color: #ef4444;">GAME</span></span>
       </div>
-      <button class="theme-btn" id="theme-toggle">☀️ लाइट मोड</button>
+      <div class="btn-group">
+        <button class="sound-toggle-btn" id="sound-toggle" onclick="toggleMasterSound()">🔊 साउंड चालू</button>
+        <button class="theme-btn" id="theme-toggle">☀️ लाइट</button>
+      </div>
     </div>
     <div class="mission-box">
       <h3 style="margin:0 0 10px 0;">मेरा मिशन: ऐप डेवलपर बनना</h3>
-      <p style="margin:0;">गेम्स पर टैप करें और अंदर जाकर सीधे खेलें!</p>
+      <p style="margin:0;">ऊपर हरा वाला बटन दबाकर साउंड चालू करें, फिर खेलें!</p>
     </div>
     <div class="menu-title">गेम्स मेन्यू (Select Game)</div>
     <div class="games-grid">
@@ -130,6 +140,7 @@
     <a href="https://youtube.com" target="_blank" class="yt-btn">यूट्यूब पर कोडिंग सीखें 📺</a>
   </div>
 
+  <!-- गेम स्क्रीन्स -->
   <div class="game-screen" id="game-container">
     <button class="back-btn" onclick="closeGame()">⬅ Back to Menu</button>
     <h2 id="game-title" style="margin-bottom: 15px;">खेलिए</h2>
@@ -137,17 +148,39 @@
   </div>
 
   <script>
-    // 🔊 साउंड सिस्टम (Web Audio API)
+    // 🔊 साउंड सिस्टम मास्टर कंट्रोल
     let bgMusicInterval = null;
     let audioCtx = null;
+    let isSoundMuted = true; // शुरू में सुरक्षा के लिए म्यूट रहेगा
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // मास्टर साउंड ऑन/ऑफ बटन फ़ंक्शन
+    function toggleMasterSound() {
+      initAudio();
+      const sBtn = document.getElementById('sound-toggle');
+      if (isSoundMuted) {
+        isSoundMuted = false;
+        sBtn.innerText = "🔊 साउंड ऑन";
+        sBtn.style.backgroundColor = "#10b981";
+        playSound('click'); // टेस्ट साउंड
+      } else {
+        isSoundMuted = true;
+        sBtn.innerText = "🔇 साउंड ऑफ़";
+        sBtn.style.backgroundColor = "#64748b";
+        stopBackgroundMusic();
+      }
     }
 
     function playSound(type) {
+      if (isSoundMuted) return; // अगर म्यूट है तो साउंड नहीं बजेगा
       try {
         initAudio();
         const oscillator = audioCtx.createOscillator();
@@ -182,32 +215,33 @@
       } catch (e) { console.log(e); }
     }
 
-    // 🎵 गेम के अंदर का निरंतर बैकग्राउंड म्यूज़िक जनरेटर
+    // 🎵 निरंतर बैकग्राउंड म्यूज़िक
     function startBackgroundMusic() {
+      if (isSoundMuted) return;
       initAudio();
       if (bgMusicInterval) clearInterval(bgMusicInterval);
 
-      let notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00]; // गेमिंग सुर नोट्स
+      let notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
       let step = 0;
 
       bgMusicInterval = setInterval(() => {
         try {
-          if (audioCtx.state === 'suspended') return;
+          if (isSoundMuted || audioCtx.state === 'suspended') return;
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           
-          osc.type = 'triangle'; // सॉफ्ट गेम टोन
+          osc.type = 'triangle';
           osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
-          gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // एकदम हल्का बैकग्राउंड वॉल्यूम
+          gain.gain.setValueAtTime(0.04, audioCtx.currentTime); // हल्का बैकग्राउंड म्यूज़िक
           
           osc.start();
           gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
           osc.stop(audioCtx.currentTime + 0.3);
           step++;
         } catch(e) {}
-      }, 350); // हर 350ms पर एक हल्की बीट बजेगी
+      }, 350);
     }
 
     function stopBackgroundMusic() {
@@ -228,9 +262,9 @@
     toggleBtn.addEventListener('click', () => {
       playSound('click');
       if (document.body.hasAttribute('data-theme')) {
-        document.body.removeAttribute('data-theme'); toggleBtn.innerText = '☀️ लाइट मोड';
+        document.body.removeAttribute('data-theme'); toggleBtn.innerText = '☀️ लाइट';
       } else {
-        document.body.setAttribute('data-theme', 'light'); toggleBtn.innerText = '🌙 डार्क मोड';
+        document.body.setAttribute('data-theme', 'light'); toggleBtn.innerText = '🌙 डार्क';
       }
     });
 
@@ -242,7 +276,7 @@
 
     function openGame(gameName) {
       playSound('click');
-      startBackgroundMusic(); // 🎵 गेम खोलते ही बैकग्राउंड म्यूज़िक चालू!
+      if (!isSoundMuted) startBackgroundMusic(); // अगर म्यूज़िक ऑन है तो चालू करें
       mainMenu.style.display = 'none'; gameContainer.style.display = 'flex';
       activeGame = gameName; playArea.innerHTML = '';
       
@@ -267,7 +301,7 @@
 
     function closeGame() {
       playSound('click');
-      stopBackgroundMusic(); // 🎵 मेन्यू में वापस आते ही बैकग्राउंड म्यूज़िक बंद!
+      stopBackgroundMusic();
       gameContainer.style.display = 'none'; mainMenu.style.display = 'flex';
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       activeGame = '';
@@ -291,8 +325,8 @@
       canvas.addEventListener('touchend', (e) => {
         if (!isDragging) return; isDragging = false;
         const touch = e.changedTouches[0]; const rect = canvas.getBoundingClientRect();
-        let endX = touch.clientX - rect.left; let endY = touch.clientY - rect.top;
-        arrow.vx = (startX - endX) * 0.2; arrow.vy = (startY - endY) * 0.2;
+        let endX = touch.clientX - rect.left; let endY = touch.top;
+        arrow.vx = (startX - endX) * 0.2; arrow.vy = (startY - (touch.clientY - rect.top)) * 0.2;
         if (startX - endX > 15) { arrow.isShot = true; playSound('click'); } else resetArrow();
       });
 
