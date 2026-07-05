@@ -28,7 +28,7 @@
       100% { transform: scale(1.1); opacity: 1; }
     }
 
-    /* 2. मुख्य थीम और लुक (प्रीमियम डार्क/लाइट) */
+    /* 2. मुख्य थीम और लुक */
     :root {
       --bg-color: #0f172a;
       --text-color: #f8fafc;
@@ -76,7 +76,6 @@
 
     .menu-title { margin-top: 30px; font-size: 1.3rem; font-weight: bold; width: 100%; opacity: 0.9; }
 
-    /* गेम्स ग्रिड - अब 4 गेम्स (तीर-धनुष के साथ) */
     .games-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; margin-top: 15px;
     }
@@ -98,7 +97,6 @@
       text-decoration: none; box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); box-sizing: border-box;
     }
 
-    /* 3. गेम स्क्रीन एरिया (शुरुआत में छुपा रहेगा) */
     .game-screen {
       display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; margin-top: 20px;
     }
@@ -108,7 +106,6 @@
       font-weight: bold; cursor: pointer; margin-bottom: 20px;
     }
 
-    /* तीर-धनुष गेम का कैनवास */
     #archery-canvas {
       background: #1e293b; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       max-width: 100%; display: block;
@@ -122,7 +119,7 @@
     <div class="splash-text">🚀 Pro Game</div>
   </div>
 
-  <!-- मुख्य मेन्यू कंटेनर -->
+  <!-- मुख्य मेन्यू -->
   <div class="container" id="main-menu">
     <div class="header">
       <h2>नमस्ते, <br><span style="color: #38bdf8;">अभिनंदन 🚀</span></h2>
@@ -154,14 +151,13 @@
     <a href="https://youtube.com" target="_blank" class="yt-btn">यूट्यूब पर कोडिंग सीखें 📺</a>
   </div>
 
-  <!-- गेम स्क्रीन एरिया (तीर-धनुष गेम के लिए) -->
+  <!-- गेम स्क्रीन एरिया -->
   <div class="game-screen" id="game-container">
     <button class="back-btn" onclick="closeGame()">⬅ Back to Menu</button>
     <h2 id="game-title" style="margin-bottom: 10px;">खेलिए</h2>
     
-    <!-- यहाँ तीर धनुष गेम का कैनवास है -->
     <canvas id="archery-canvas" width="360" height="400"></canvas>
-    <p style="opacity: 0.7; font-size: 0.9rem; margin-top: 10px;">स्क्रीन पर टच करके पीछे खींचें और निशाना छोड़ें!</p>
+    <p style="opacity: 0.7; font-size: 0.9rem; margin-top: 10px;">तीर के पास टच करके पीछे (Left) खींचें और छोड़ें!</p>
   </div>
 
   <script>
@@ -186,7 +182,7 @@
       }
     });
 
-    // 3. स्क्रीन बदलने का लॉजिक (मेन्यू से गेम के अंदर जाना)
+    // 3. स्क्रीन बदलने का लॉजिक
     const mainMenu = document.getElementById('main-menu');
     const gameContainer = document.getElementById('game-container');
     const gameTitle = document.getElementById('game-title');
@@ -199,9 +195,8 @@
         gameTitle.innerText = "🎯 तीर धनुष गेम";
         startArcheryGame();
       } else {
-        // बाकी गेम्स के लिए अभी सिंपल मैसेज स्क्रीन बनाई है
         gameTitle.innerText = gameName.toUpperCase() + " गेम";
-        alert(gameName + " गेम लोड हो रहा है! (बाकी गेम्स का कोड भी आप ऐसे ही जोड़ सकते हैं)");
+        alert(gameName + " गेम लोड हो रहा है!");
       }
     }
 
@@ -211,13 +206,13 @@
       stopArcheryGame();
     }
 
-    // 4. तीर-धनुष गेम का लॉजिक और कोडिंग (Canvas आधारित गेम)
+    // 4. तीर-धनुष गेम का लॉजिक
     const canvas = document.getElementById('archery-canvas');
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    let arrow = { x: 50, y: 200, vx: 0, vy: 0, isShot: false };
-    let target = { x: 320, y: 200, radius: 25, speed: 2 };
+    let arrow = { x: 60, y: 200, vx: 0, vy: 0, isShot: false };
+    let target = { x: 320, y: 200, radius: 25, speed: 2.5 };
     let score = 0;
     let isDragging = false;
     let startX, startY;
@@ -225,9 +220,9 @@
     function startArcheryGame() {
       score = 0;
       resetArrow();
-      canvas.addEventListener('touchstart', handleStart);
-      canvas.addEventListener('touchmove', handleMove);
-      canvas.addEventListener('touchend', handleEnd);
+      canvas.addEventListener('touchstart', handleStart, {passive: false});
+      canvas.addEventListener('touchmove', handleMove, {passive: false});
+      canvas.addEventListener('touchend', handleEnd, {passive: false});
       gameLoop();
     }
 
@@ -239,7 +234,7 @@
     }
 
     function resetArrow() {
-      arrow.x = 50; arrow.y = 200;
+      arrow.x = 60; arrow.y = 200;
       arrow.vx = 0; arrow.vy = 0;
       arrow.isShot = false;
     }
@@ -250,8 +245,11 @@
       const rect = canvas.getBoundingClientRect();
       startX = touch.clientX - rect.left;
       startY = touch.clientY - rect.top;
-      if (Math.abs(startX - arrow.x) < 30 && Math.abs(startY - arrow.y) < 30) {
+      
+      // तीर के आस-पास कहीं भी टच करने पर ड्रैग चालू होगा
+      if (startX < 120 && Math.abs(startY - arrow.y) < 50) {
         isDragging = true;
+        e.preventDefault();
       }
     }
 
@@ -263,17 +261,18 @@
     function handleEnd(e) {
       if (!isDragging) return;
       isDragging = false;
+      
       const touch = e.changedTouches[0];
       const rect = canvas.getBoundingClientRect();
       let endX = touch.clientX - rect.left;
       let endY = touch.clientY - rect.top;
 
-      // पीछे खींचने की ताकत के हिसाब से स्पीड तय होगी
-      arrow.vx = (startX - endX) * 0.15;
-      arrow.vy = (startY - endY) * 0.15;
+      // पीछे खींचने की दूरी के हिसाब से स्पीड
+      arrow.vx = (startX - endX) * 0.2;
+      arrow.vy = (startY - endY) * 0.2;
       
-      // मिनिमम स्पीड लिमिट ताकि तीर आगे बढे
-      if (arrow.vx > 2) {
+      // अगर लेफ्ट साइड खींचा है, तो ही तीर आगे जाएगा
+      if (startX - endX > 15) { 
         arrow.isShot = true;
       } else {
         resetArrow();
@@ -283,68 +282,69 @@
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // टारगेट (बोर्ड) को ऊपर नीचे हिलाना
+      // टारगेट मूवमेंट
       target.y += target.speed;
-      if (target.y - target.radius < 0 || target.y + target.radius > canvas.height) {
+      if (target.y - target.radius < 10 || target.y + target.radius > canvas.height - 10) {
         target.speed *= -1;
       }
 
-      // टारगेट ड्रा करना (🎯 लुक)
+      // 🎯 ड्रा टारगेट
       ctx.beginPath(); ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'red'; ctx.fill();
+      ctx.fillStyle = '#ef4444'; ctx.fill();
       ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.6, 0, Math.PI * 2);
-      ctx.fillStyle = 'white'; ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fill();
       ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.2, 0, Math.PI * 2);
-      ctx.fillStyle = 'yellow'; ctx.fill();
+      ctx.fillStyle = '#eab308'; ctx.fill();
 
-      // तीर की मूवमेंट संभालना
+      // तीर की पोजीशन
       if (arrow.isShot) {
         arrow.x += arrow.vx;
         arrow.y += arrow.vy;
 
-        // चेक करना कि क्या तीर टारगेट से टकराया
-        let dist = Math.hypot(arrow.x - target.x, arrow.y - target.y);
-        if (dist < target.radius && arrow.x < target.x + 10) {
+        // कोलिशन चेक (टारगेट हिट हुआ या नहीं)
+        let dist = Math.hypot(arrow.x + 35 - target.x, arrow.y - target.y);
+        if (dist < target.radius) {
           score += 10;
           resetArrow();
         }
 
-        // स्क्रीन से बाहर जाने पर रीसेट
+        // बाहर जाने पर रीसेट
         if (arrow.x > canvas.width || arrow.y < 0 || arrow.y > canvas.height) {
           resetArrow();
         }
       }
 
-      // धनुष और तीर ड्रा करना
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#f8fafc';
-      if (!arrow.isShot) {
-        // धनुष की कमान
-        ctx.beginPath();
-        ctx.arc(30, 200, 40, -Math.PI/2, Math.PI/2);
-        ctx.stroke();
-        // तीर
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(arrow.x, arrow.y - 2, 35, 4);
-      } else {
-        // उड़ता हुआ तीर
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(arrow.x, arrow.y - 2, 35, 4);
-      }
+      // 🏹 धनुष और तीर ड्रा करना
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#64748b';
+      
+      // कमान ड्रा करना
+      ctx.beginPath();
+      ctx.arc(40, 200, 50, -Math.PI/2, Math.PI/2);
+      ctx.stroke();
 
-      // स्कोर बोर्ड दिखाना
+      // तीर ड्रा करना
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(arrow.x, arrow.y - 2, 35, 4);
+      // तीर की नोक (त्रिभुज)
+      ctx.beginPath();
+      ctx.moveTo(arrow.x + 35, arrow.y - 5);
+      ctx.lineTo(arrow.x + 43, arrow.y);
+      ctx.lineTo(arrow.x + 35, arrow.y + 5);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fill();
+
+      // स्कोर दिखाना
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px sans-serif';
-      ctx.fillText("स्कोर: " + score, 20, 30);
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText("स्कोर: " + score, 25, 35);
 
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
-    // PWA Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
   </script>
 </body>
 </html>
-
