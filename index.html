@@ -309,26 +309,60 @@
 
     // ================= [1. तीर धनुष गेम लॉजिक] =================
     function startArchery() {
-      const canvas = document.getElementById('archery-canvas'); const ctx = canvas.getContext('2d');
-      let arrow = { x: 60, y: 190, vx: 0, vy: 0, isShot: false };
-      let target = { x: 320, y: 190, radius: 25, speed: 2.5 };
-      let score = 0; let isDragging = false; let startX, startY;
+    const canvas = document.getElementById('archery-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // आदमी और धनुष की स्थिति
+    let archer = { x: 50, y: 190 };
+    let arrow = { x: 50, y: 190, isShot: false, power: 0 };
+    let isDragging = false;
+    let dragStartX, dragStartY;
 
-      canvas.addEventListener('touchstart', (e) => {
-        if (arrow.isShot) return; const touch = e.touches[0]; const rect = canvas.getBoundingClientRect();
-        startX = touch.clientX - rect.left; startY = touch.clientY - rect.top;
-        if (startX < 120 && Math.abs(startY - arrow.y) < 50) { isDragging = true; e.preventDefault(); }
-      }, {passive: false});
+    // टच कंट्रोल: खींचने के लिए
+    canvas.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+    });
 
-      canvas.addEventListener('touchmove', (e) => { if (isDragging) e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchend', (e) => {
+        isDragging = false;
+        arrow.isShot = true; // तीर छूट गया
+    });
 
-      canvas.addEventListener('touchend', (e) => {
-        if (!isDragging) return; isDragging = false;
-        const touch = e.changedTouches[0]; const rect = canvas.getBoundingClientRect();
-        let endX = touch.clientX - rect.left; let endY = touch.top;
-        arrow.vx = (startX - endX) * 0.2; arrow.vy = (startY - (touch.clientY - rect.top)) * 0.2;
-        if (startX - endX > 15) { arrow.isShot = true; playSound('click'); } else resetArrow();
-      });
+    function loop() {
+        if (activeGame !== 'archery') return;
+
+        // 1. जंगल बैकग्राउंड ड्रा करें
+        ctx.fillStyle = '#166534'; // गहरा हरा जंगल
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 2. तीरंदाज आदमी ड्रा करें
+        ctx.fillStyle = '#fbbf24'; // शरीर
+        ctx.fillRect(archer.x - 15, archer.y, 30, 50);
+        ctx.fillStyle = '#fef3c7'; // चेहरा
+        ctx.beginPath(); ctx.arc(archer.x, archer.y - 20, 15, 0, Math.PI*2); ctx.fill();
+        
+        // 3. धनुष और डोरी (खींचने वाला इफेक्ट)
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(archer.x + 10, archer.y - 10);
+        ctx.quadraticCurveTo(isDragging ? archer.x - 20 : archer.x + 20, archer.y + 20, archer.x + 10, archer.y + 50);
+        ctx.stroke();
+
+        // 4. तीर का मूवमेंट
+        if (arrow.isShot) {
+            arrow.x += 10; // तीर आगे बढ़ेगा
+            ctx.fillStyle = 'white';
+            ctx.fillRect(arrow.x, archer.y + 15, 30, 4);
+        }
+
+        animationFrameId = requestAnimationFrame(loop);
+    }
+    loop();
+}
+
 
       function resetArrow() { arrow.x = 60; arrow.y = 190; arrow.vx = 0; arrow.vy = 0; arrow.isShot = false; }
 
