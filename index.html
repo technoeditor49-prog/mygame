@@ -95,11 +95,15 @@
 
   <div id="splash-screen"><div class="splash-text">🚀 Pro Game</div></div>
 
-  <div class="container" id="main-menu">
+    <div class="container" id="main-menu">
     <div class="header">
-      <h2>नमस्ते, <br><span style="color: #38bdf8;">अभिनंदन 🚀</span></h2>
-      <button class="theme-btn" id="theme-toggle">☀️ लाइट模</button>
+      <div class="game-logo">
+        <span class="logo-icon">🎮</span>
+        <span class="logo-text">PRO<span style="color: #ef4444;">GAME</span></span>
+      </div>
+      <button class="theme-btn" id="theme-toggle">☀️ लाइट मोड</button>
     </div>
+
     <div class="mission-box">
       <h3 style="margin:0 0 10px 0;">मेरा मिशन: ऐप डेवलपर बनना</h3>
       <p style="margin:0;">गेम्स पर टैप करें और अंदर जाकर सीधे खेलें!</p>
@@ -315,7 +319,28 @@
         snake.unshift(newHead);
       }
       animationFrameId = requestAnimationFrame(loop);
+    }     .game-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
+    .logo-icon {
+      font-size: 2.2rem;
+      animation: float 2s ease-in-out infinite alternate;
+    }
+    .logo-text {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #38bdf8;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+      font-family: 'Impact', 'Arial Black', sans-serif;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-5px) rotate(10deg); }
+    }
+
   </script>
 </body>
 </html>
