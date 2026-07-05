@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🔫 Shiva Thar Shooter Edition</title>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87ceeb; font-family: sans-serif; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+
+    /* 🎮 कंट्रोल्स UI */
+    .gaming-ui {
+      position: absolute; bottom: 20px; left: 0; width: 100%;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 0 20px; box-sizing: border-box; z-index: 10; pointer-events: none;
+    }
+    .steering-side, .actions-side { display: flex; gap: 12px; pointer-events: auto; }
+    .actions-side { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+    .game-ui-btn {
+      background: linear-gradient(135deg, #334155, #475569);
+      color: white; border: 2px solid #cbd5e1; border-radius: 18px;
+      font-size: 1.3rem; font-weight: bold; width: 68px; height: 62px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      cursor: pointer; user-select: none; box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+    }
+    .game-ui-btn:active { background: #1e293b; transform: scale(0.92); }
+
+    .race-btn { background: linear-gradient(135deg, #16a34a, #15803d); border-color: #22c55e; }
+    .brake-btn { background: linear-gradient(135deg, #475569, #334155); }
+    
+    /* 💥 फायर बटन (विशेष रूप से शूटिंग के लिए) */
+    .fire-btn { 
+      background: linear-gradient(135deg, #dc2626, #b91c1c); 
+      border-color: #ef4444; font-size: 1.1rem;
+    }
+    
+    .action-spec-btn {
+      grid-column: span 2; background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border: 2px solid #3b82f6; height: 45px; border-radius: 25px;
+      font-size: 1rem; text-transform: uppercase;
+    }
+
+    #info-board {
+      position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7);
+      padding: 10px 20px; border-radius: 10px; color: #fff;
+      font-weight: bold; font-size: 1.1rem; z-index: 10; border: 1px solid #3b82f6;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="info-board">👾 दुश्मन बचे: <span id="enemy-count" style="color:#ef4444;">4</span></div>
+  <div id="canvas-container"></div>
+
+  <div class="gaming-ui">
+    <div class="steering-side">
+      <div class="game-ui-btn" id="btn-left">◀️</div>
+      <div class="game-ui-btn" id="btn-right">▶️</div>
+    </div>
+    <div class="actions-side">
+      <div class="game-ui-btn fire-btn" id="btn-fire">💥<br><span style="font-size:0.5rem;">FIRE</span></div>
+      <div class="game-ui-btn race-btn" id="btn-up">🔼<br><span style="font-size:0.5rem;">RACE</span></div>
+      <div class="game-ui-btn brake-btn" id="btn-down">🔽<br><span style="font-size:0.5rem;">REVERSE</span></div>
+      <div class="game-ui-btn action-spec-btn" id="btn-action">🚗 ENTER CAR</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // --- SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(20, 40, 20);
+    scene.add(dirLight);
+
+    // --- ENVIRONMENT ---
+    const groundGeo = new THREE.PlaneGeometry(300, 300);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0xcc6644 }); 
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    const roadGeo = new THREE.PlaneGeometry(14, 300);
+    const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+    const road = new THREE.Mesh(roadGeo, roadMat);
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(0, 0.01, 0);
+    scene.add(road);
+
+    // --- REAL 3D SHIVA CHARACTER ---
+    const shiva = new THREE.Group();
+    // पैर
+    const legGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.6, 12);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
+    const leftLeg = new THREE.Mesh(legGeo, legMat); leftLeg.position.set(-0.2, 0.3, 0); shiva.add(leftLeg);
+    const rightLeg = new THREE.Mesh(legGeo, legMat); rightLeg.position.set(0.2, 0.3, 0); shiva.add(rightLeg);
+    // शरीर
+    const bodyGeo = new THREE.CylinderGeometry(0.32, 0.28, 0.9, 16);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat); body.position.y = 0.95; shiva.add(body);
+    // पीली पट्टी
+    const stripeGeo = new THREE.CylinderGeometry(0.33, 0.33, 0.15, 16);
+    const stripeMat = new THREE.MeshStandardMaterial({ color: 0xeab308 });
+    const stripe = new THREE.Mesh(stripeGeo, stripeMat); stripe.position.y = 1.0; shiva.add(stripe);
+    // चेहरा
+    const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffe4e6 });
+    const head = new THREE.Mesh(headGeo, headMat); head.position.y = 1.45; shiva.add(head);
+    // बाल
+    const hairGeo = new THREE.SphereGeometry(0.3, 16, 16, 0, Math.PI*2, 0, Math.PI/1.8);
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x111827 });
+    const hair = new THREE.Mesh(hairGeo, hairMat); hair.position.set(0, 1.5, 0.02); shiva.add(hair);
+
+    // 🔫 शिवा की गन
+    const gunGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
+    const gunMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+    const gun = new THREE.Mesh(gunGeo, gunMat);
+    gun.rotation.x = Math.PI / 2;
+    gun.position.set(0.4, 0.9, -0.3);
+    shiva.add(gun);
+
+    shiva.position.set(0, 0, 15);
+    scene.add(shiva);
+
+    // --- VEHICLE (3D थार) ---
+    const car = new THREE.Group();
+    const carBodyGeo = new THREE.BoxGeometry(2.2, 0.8, 3.8);
+    const carBodyMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+    const carBody = new THREE.Mesh(carBodyGeo, carBodyMat); carBody.position.y = 0.6; car.add(carBody);
+    const cabinGeo = new THREE.BoxGeometry(2.0, 0.8, 1.8);
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+    const cabin = new THREE.Mesh(cabinGeo, cabinMat); cabin.position.set(0, 1.3, -0.3); car.add(cabin);
+    const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 16);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x090d16 });
+    function addWheel(x, y, z) {
+      const w = new THREE.Mesh(wheelGeo, wheelMat); w.rotation.z = Math.PI / 2; w.position.set(x, y, z); car.add(w);
+    }
+    addWheel(-1.2, 0.45, 1.3);  addWheel(1.2, 0.45, 1.3);
+    addWheel(-1.2, 0.45, -1.3); addWheel(1.2, 0.45, -1.3);
+    car.position.set(0, 0, 0);
+    scene.add(car);
+
+    // --- ENEMIES (दुश्मन विलेन्स) ---
+    let enemies = [];
+    function spawnEnemy(x, z) {
+      const eGroup = new THREE.Group();
+      const eBodyGeo = new THREE.BoxGeometry(1, 1.5, 1);
+      const eBodyMat = new THREE.MeshStandardMaterial({ color: 0x475569 }); // डार्क सूट विलेन लुक
+      const eBody = new THREE.Mesh(eBodyGeo, eBodyMat); eBody.position.y = 0.75; eGroup.add(eBody);
+      const eEyeGeo = new THREE.SphereGeometry(0.12, 8, 8);
+      const eEyeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 }); // डरावनी लाल आँखें
+      const leftEye = new THREE.Mesh(eEyeGeo, eEyeMat); leftEye.position.set(-0.2, 1.2, -0.52); eGroup.add(leftEye);
+      const rightEye = new THREE.Mesh(eEyeGeo, eEyeMat); rightEye.position.set(0.2, 1.2, -0.52); eGroup.add(rightEye);
+      
+      eGroup.position.set(x, 0, z);
+      scene.add(eGroup);
+      enemies.push({ mesh: eGroup, vx: (Math.random() - 0.5) * 0.08, vz: (Math.random() - 0.5) * 0.08 });
+    }
+    spawnEnemy(-5, -10); spawnEnemy(6, -20); spawnEnemy(-8, 5); spawnEnemy(10, -5);
+
+    // --- CONTROLS LOGIC ---
+    let keys = { up: false, down: false, left: false, right: false };
+    let isDriving = false;
+    let bullets = [];
+
+    function bindBtn(id, prop) {
+      const btn = document.getElementById(id);
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[prop] = true; });
+      btn.addEventListener('touchend', () => { keys[prop] = false; });
+    }
+    bindBtn('btn-up', 'up'); bindBtn('btn-down', 'down');
+    bindBtn('btn-left', 'left'); bindBtn('btn-right', 'right');
+
+    // 💥 गोली चलाने का सिस्टम
+    document.getElementById('btn-fire').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (isDriving) return; // गाड़ी चलाते समय गोली नहीं चलेगी
+      
+      const bGeo = new THREE.SphereGeometry(0.15, 8, 8);
+      const bMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 }); // चमकती पीली गोली
+      const bullet = new THREE.Mesh(bGeo, bMat);
+      bullet.position.set(shiva.position.x, shiva.position.y + 0.9, shiva.position.z);
+      
+      let speed = 0.5;
+      let vx = Math.sin(shiva.rotation.y) * -speed;
+      let vz = Math.cos(shiva.rotation.y) * -speed;
+      
+      scene.add(bullet);
+      bullets.push({ mesh: bullet, vx: vx, vz: vz, life: 60 });
+    });
+
+    const actionBtn = document.getElementById('btn-action');
+    actionBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (!isDriving) {
+        let dist = shiva.position.distanceTo(car.position);
+        if (dist < 3.5) {
+          isDriving = true;
+          shiva.visible = false;
+          actionBtn.innerText = "🚗 EXIT CAR";
+        } else { alert("गाड़ी के थोड़े और पास जाएँ!"); }
+      } else {
+        isDriving = false;
+        shiva.visible = true;
+        shiva.position.set(car.position.x + 2, 0, car.position.z);
+        actionBtn.innerText = "🚗 ENTER CAR";
+      }
+    });
+
+    // --- ANIMATION LOOP ---
+    let shivaSpeed = 0.13, carSpeed = 0.3;
+    let turnSpeed = 0.045;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (!isDriving) {
+        if (keys.left) shiva.rotation.y += turnSpeed;
+        if (keys.right) shiva.rotation.y -= turnSpeed;
+        if (keys.up) {
+          shiva.position.x += Math.sin(shiva.rotation.y) * -shivaSpeed;
+          shiva.position.z += Math.cos(shiva.rotation.y) * -shivaSpeed;
+        }
+        if (keys.down) {
+          shiva.position.x -= Math.sin(shiva.rotation.y) * -shivaSpeed;
+          shiva.position.z -= Math.cos(shiva.rotation.y) * -shivaSpeed;
+        }
+        camera.position.x = shiva.position.x + Math.sin(shiva.rotation.y) * 6;
+        camera.position.z = shiva.position.z + Math.cos(shiva.rotation.y) * 6;
+        camera.position.y = shiva.position.y + 3.2;
+        camera.lookAt(shiva.position);
+      } else {
+        if (keys.left) car.rotation.y += turnSpeed * 0.7;
+        if (keys.right) car.rotation.y -= turnSpeed * 0.7;
+        if (keys.up) {
+          car.position.x += Math.sin(car.rotation.y) * -carSpeed;
+          car.position.z += Math.cos(car.rotation.y) * -carSpeed;
+        }
+        if (keys.down) {
+          car.position.x -= Math.sin(car.rotation.y) * -carSpeed;
+          car.position.z -= Math.cos(car.rotation.y) * -carSpeed;
+        }
+        camera.position.x = car.position.x + Math.sin(car.rotation.y) * 8;
+        camera.position.z = car.position.z + Math.cos(car.rotation.y) * 8;
+        camera.position.y = car.position.y + 4.5;
+        camera.lookAt(car.position);
+      }
+
+      // गोलियों का मूवमेंट और दुश्मनों को मारना
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        let b = bullets[i];
+        b.mesh.position.x += b.vx;
+        b.mesh.position.z += b.vz;
+        b.life--;
+
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          let e = enemies[j];
+          if (b.mesh.position.distanceTo(e.mesh.position) < 1.0) {
+            scene.remove(e.mesh);
+            enemies.splice(j, 1);
+            scene.remove(b.mesh);
+            bullets.splice(i, 1);
+            document.getElementById('enemy-count').innerText = enemies.length;
+            break;
+          }
+        }
+        if (b.life <= 0 && bullets[i]) { scene.remove(b.mesh); bullets.splice(i, 1); }
+      }
+
+      // दुश्मनों का मूवमेंट और शिवा पर हमला
+      enemies.forEach(e => {
+        e.mesh.position.x += e.vx; e.mesh.position.z += e.vz;
+        if (Math.abs(e.mesh.position.x) > 50) e.vx *= -1;
+        if (Math.abs(e.mesh.position.z) > 50) e.vz *= -1;
+
+        if (!isDriving && shiva.position.distanceTo(e.mesh.position) < 1.1) {
+          alert("😢 दुश्मन ने शिवा को पकड़ लिया! दोबारा खेलें।");
+          shiva.position.set(0, 0, 15);
+        }
+      });
+
+      if (enemies.length === 0) {
+        alert("🏆 शानदार! शिवा ने सभी दुश्मनों को मार गिराया!");
+        location.reload();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    animate();
+  </script>
+</body>
+</html>
