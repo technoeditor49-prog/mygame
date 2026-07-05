@@ -6,195 +6,175 @@
   <title>Pro Game App</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    /* 1. स्प्लैश स्क्रीन (Welcome Animation) की स्टाइल */
+    /* 1. स्प्लैश स्क्रीन एनीमेशन */
     #splash-screen {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #121212;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: #0f172a;
+      display: flex; justify-content: center; align-items: center;
       z-index: 9999;
       transition: opacity 0.5s ease-out;
     }
-
     .splash-text {
       font-size: 3rem;
-      color: #00adb5;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #38bdf8;
+      font-family: sans-serif;
       font-weight: bold;
       animation: popUp 1.2s ease-in-out infinite alternate;
-      text-shadow: 0 0 20px rgba(0, 173, 181, 0.5);
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
     }
-
     @keyframes popUp {
       0% { transform: scale(0.85); opacity: 0.7; }
       100% { transform: scale(1.1); opacity: 1; }
     }
 
-    /* 2. मुख्य गेम थीम और लेआउट (लाइट/डार्क मोड सपोर्ट) */
+    /* 2. मुख्य थीम और लुक (प्रीमियम डार्क/लाइट) */
     :root {
-      --bg-color: #121212;
-      --text-color: #ffffff;
-      --card-bg: #1a1a1a;
-      --btn-bg: #00adb5;
-      --btn-text: #ffffff;
+      --bg-color: #0f172a;
+      --text-color: #f8fafc;
+      --card-bg: #1e293b;
+      --btn-bg: #38bdf8;
+      --btn-text: #0f172a;
     }
-
     [data-theme="light"] {
-      --bg-color: #f5f5f5;
-      --text-color: #121212;
+      --bg-color: #f1f5f9;
+      --text-color: #0f172a;
       --card-bg: #ffffff;
-      --btn-bg: #ff5722;
+      --btn-bg: #f97316;
       --btn-text: #ffffff;
     }
 
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background-color: var(--bg-color);
       color: var(--text-color);
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: system-ui, sans-serif;
+      display: flex; flex-direction: column; align-items: center;
       min-height: 100vh;
       transition: background 0.3s, color 0.3s;
     }
 
-    .header {
-      width: 90%;
-      max-width: 400px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
+    .container {
+      width: 90%; max-width: 450px;
+      display: flex; flex-direction: column; align-items: center;
     }
 
+    .header {
+      width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 25px;
+    }
     .theme-btn {
-      background-color: var(--btn-bg);
-      color: var(--btn-text);
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      background-color: var(--btn-bg); color: var(--btn-text);
+      border: none; padding: 10px 18px; border-radius: 25px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .mission-box {
-      width: 90%;
-      max-width: 400px;
-      background-color: #00adb5;
-      color: white;
-      padding: 20px;
-      border-radius: 15px;
-      margin-top: 20px;
-      box-shadow: 0 4px 15px rgba(0, 173, 181, 0.3);
-      box-sizing: border-box;
+      width: 100%; background: linear-gradient(135deg, #38bdf8, #0369a1);
+      color: white; padding: 20px; border-radius: 20px; margin-top: 20px;
+      box-shadow: 0 10px 20px rgba(3, 105, 161, 0.3); box-sizing: border-box;
     }
 
-    .menu-title {
-      margin-top: 30px;
-      font-size: 1.2rem;
-      opacity: 0.8;
-      width: 90%;
-      max-width: 400px;
-    }
+    .menu-title { margin-top: 30px; font-size: 1.3rem; font-weight: bold; width: 100%; opacity: 0.9; }
 
+    /* गेम्स ग्रिड - अब 4 गेम्स (तीर-धनुष के साथ) */
     .games-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      width: 90%;
-      max-width: 400px;
-      margin-top: 15px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; margin-top: 15px;
     }
-
     .game-card {
-      background-color: var(--card-bg);
-      border: 2px solid transparent;
-      border-radius: 12px;
-      padding: 15px 5px;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
+      background-color: var(--card-bg); border-radius: 18px; padding: 25px 10px;
+      text-align: center; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(255,255,255,0.05);
     }
-
-    .game-card:hover {
-      transform: scale(1.05);
-    }
-
-    .card-xo { border-color: #ff2e63; color: #ff2e63; }
-    .card-num { border-color: #00adb5; color: #00adb5; }
-    .card-snake { border-color: #ffde59; color: #ffde59; }
+    .game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); }
+    
+    .card-xo { color: #f43f5e; }
+    .card-arrow { color: #10b981; }
+    .card-num { color: #38bdf8; }
+    .card-snake { color: #eab308; }
 
     .yt-btn {
-      width: 90%;
-      max-width: 400px;
-      background-color: #ff2e63;
-      color: white;
-      text-align: center;
-      padding: 15px;
-      border-radius: 12px;
-      margin-top: 30px;
-      font-weight: bold;
-      text-decoration: none;
-      box-shadow: 0 4px 15px rgba(255, 46, 99, 0.4);
-      box-sizing: border-box;
+      width: 100%; background-color: #ef4444; color: white; text-align: center;
+      padding: 16px; border-radius: 18px; margin-top: 30px; font-weight: bold;
+      text-decoration: none; box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); box-sizing: border-box;
+    }
+
+    /* 3. गेम स्क्रीन एरिया (शुरुआत में छुपा रहेगा) */
+    .game-screen {
+      display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; margin-top: 20px;
+    }
+    .back-btn {
+      align-self: flex-start; background-color: var(--card-bg); color: var(--text-color);
+      border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px;
+      font-weight: bold; cursor: pointer; margin-bottom: 20px;
+    }
+
+    /* तीर-धनुष गेम का कैनवास */
+    #archery-canvas {
+      background: #1e293b; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      max-width: 100%; display: block;
     }
   </style>
 </head>
 <body>
 
-  <!-- स्प्लैश स्क्रीन (यह ऐप खुलते ही दिखेगी) -->
+  <!-- स्प्लैश स्क्रीन -->
   <div id="splash-screen">
     <div class="splash-text">🚀 Pro Game</div>
   </div>
 
-  <!-- मुख्य ऐप कंटेंट -->
-  <div class="header">
-    <h2>नमस्ते, <br><span style="color: #00adb5;">अभिनंदन 🚀</span></h2>
-    <button class="theme-btn" id="theme-toggle">☀️ लाइट मोड</button>
+  <!-- मुख्य मेन्यू कंटेनर -->
+  <div class="container" id="main-menu">
+    <div class="header">
+      <h2>नमस्ते, <br><span style="color: #38bdf8;">अभिनंदन 🚀</span></h2>
+      <button class="theme-btn" id="theme-toggle">☀️ लाइट मोड</button>
+    </div>
+
+    <div class="mission-box">
+      <h3 style="margin:0 0 10px 0;">मेरा मिशन: ऐप डेवलपर बनना</h3>
+      <p style="margin:0;">गेम्स पर टैप करें और अंदर जाकर सीधे खेलें!</p>
+    </div>
+
+    <div class="menu-title">गेम्स मेन्यू (Select Game)</div>
+
+    <div class="games-grid">
+      <div class="game-card card-arrow" onclick="openGame('archery')">
+        <span style="font-size: 2.5rem;">🏹</span><br><b style="font-size: 1.1rem;">तीर धनुष</b>
+      </div>
+      <div class="game-card card-xo" onclick="openGame('xo')">
+        <span style="font-size: 2.5rem;">❌⭕</span><br><b style="font-size: 1.1rem;">Tic-Tac-Toe</b>
+      </div>
+      <div class="game-card card-num" onclick="openGame('num')">
+        <span style="font-size: 2.5rem;">🔢</span><br><b style="font-size: 1.1rem;">नंबर चैलेंज</b>
+      </div>
+      <div class="game-card card-snake" onclick="openGame('snake')">
+        <span style="font-size: 2.5rem;">🐍</span><br><b style="font-size: 1.1rem;">स्नेक गेम</b>
+      </div>
+    </div>
+
+    <a href="https://youtube.com" target="_blank" class="yt-btn">यूट्यूब पर कोडिंग सीखें 📺</a>
   </div>
 
-  <div class="mission-box">
-    <h3>मेरा मिशन: ऐप डेवलपर बनना</h3>
-    <p>डार्क/लाइट मोड के साथ 3 मज़ेदार गेम्स लाइव हैं!</p>
+  <!-- गेम स्क्रीन एरिया (तीर-धनुष गेम के लिए) -->
+  <div class="game-screen" id="game-container">
+    <button class="back-btn" onclick="closeGame()">⬅ Back to Menu</button>
+    <h2 id="game-title" style="margin-bottom: 10px;">खेलिए</h2>
+    
+    <!-- यहाँ तीर धनुष गेम का कैनवास है -->
+    <canvas id="archery-canvas" width="360" height="400"></canvas>
+    <p style="opacity: 0.7; font-size: 0.9rem; margin-top: 10px;">स्क्रीन पर टच करके पीछे खींचें और निशाना छोड़ें!</p>
   </div>
 
-  <div class="menu-title">गेम्स मेन्यू (Select Game)</div>
-
-  <div class="games-grid">
-    <div class="game-card card-xo" onclick="alert('Tic-Tac-Toe गेम शुरू हो रहा है!')">
-      <b style="font-size: 1.5rem;">XO</b><br><small>Tic-Tac</small>
-    </div>
-    <div class="game-card card-num" onclick="alert('नंबर चैलेंज गेम शुरू हो रहा है!')">
-      <span style="font-size: 1.5rem;">🎮</span><br><small>नंबर चैलेंज</small>
-    </div>
-    <div class="game-card card-snake" onclick="alert('स्नेक गेम शुरू हो रहा है!')">
-      <span style="font-size: 1.5rem;">🐍</span><br><small>स्नेक गेम</small>
-    </div>
-  </div>
-
-  <a href="https://youtube.com" target="_blank" class="yt-btn">यूट्यूब पर कोडिंग सीखें 📺</a>
-
-  <!-- स्क्रिप्ट्स (एनीमेशन, थीम और सर्विस वर्कर) -->
   <script>
-    // 1. स्प्लैश स्क्रीन को 2 सेकंड बाद हटाने का लॉजिक
+    // 1. स्प्लैश स्क्रीन हटाने का लॉजिक
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         splash.style.opacity = '0';
-        setTimeout(() => splash.remove(), 500); // पूरी तरह डिलीट करने के लिए
-      }, 2000); // 2000ms = 2 सेकंड का इंतज़ार
+        setTimeout(() => splash.remove(), 500);
+      }, 2000);
     });
 
-    // 2. डार्क/लाइट थीम टॉगल लॉजिक
+    // 2. थीम चेंज लॉजिक
     const toggleBtn = document.getElementById('theme-toggle');
     toggleBtn.addEventListener('click', () => {
       if (document.body.hasAttribute('data-theme')) {
@@ -206,11 +186,165 @@
       }
     });
 
-    // 3. प्रोग्रेसिव ऐप (Service Worker) रजिस्ट्रेशन
+    // 3. स्क्रीन बदलने का लॉजिक (मेन्यू से गेम के अंदर जाना)
+    const mainMenu = document.getElementById('main-menu');
+    const gameContainer = document.getElementById('game-container');
+    const gameTitle = document.getElementById('game-title');
+
+    function openGame(gameName) {
+      mainMenu.style.display = 'none';
+      gameContainer.style.display = 'flex';
+      
+      if (gameName === 'archery') {
+        gameTitle.innerText = "🎯 तीर धनुष गेम";
+        startArcheryGame();
+      } else {
+        // बाकी गेम्स के लिए अभी सिंपल मैसेज स्क्रीन बनाई है
+        gameTitle.innerText = gameName.toUpperCase() + " गेम";
+        alert(gameName + " गेम लोड हो रहा है! (बाकी गेम्स का कोड भी आप ऐसे ही जोड़ सकते हैं)");
+      }
+    }
+
+    function closeGame() {
+      gameContainer.style.display = 'none';
+      mainMenu.style.display = 'flex';
+      stopArcheryGame();
+    }
+
+    // 4. तीर-धनुष गेम का लॉजिक और कोडिंग (Canvas आधारित गेम)
+    const canvas = document.getElementById('archery-canvas');
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let arrow = { x: 50, y: 200, vx: 0, vy: 0, isShot: false };
+    let target = { x: 320, y: 200, radius: 25, speed: 2 };
+    let score = 0;
+    let isDragging = false;
+    let startX, startY;
+
+    function startArcheryGame() {
+      score = 0;
+      resetArrow();
+      canvas.addEventListener('touchstart', handleStart);
+      canvas.addEventListener('touchmove', handleMove);
+      canvas.addEventListener('touchend', handleEnd);
+      gameLoop();
+    }
+
+    function stopArcheryGame() {
+      cancelAnimationFrame(animationFrameId);
+      canvas.removeEventListener('touchstart', handleStart);
+      canvas.removeEventListener('touchmove', handleMove);
+      canvas.removeEventListener('touchend', handleEnd);
+    }
+
+    function resetArrow() {
+      arrow.x = 50; arrow.y = 200;
+      arrow.vx = 0; arrow.vy = 0;
+      arrow.isShot = false;
+    }
+
+    function handleStart(e) {
+      if (arrow.isShot) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      startX = touch.clientX - rect.left;
+      startY = touch.clientY - rect.top;
+      if (Math.abs(startX - arrow.x) < 30 && Math.abs(startY - arrow.y) < 30) {
+        isDragging = true;
+      }
+    }
+
+    function handleMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+    }
+
+    function handleEnd(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      const touch = e.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      let endX = touch.clientX - rect.left;
+      let endY = touch.clientY - rect.top;
+
+      // पीछे खींचने की ताकत के हिसाब से स्पीड तय होगी
+      arrow.vx = (startX - endX) * 0.15;
+      arrow.vy = (startY - endY) * 0.15;
+      
+      // मिनिमम स्पीड लिमिट ताकि तीर आगे बढे
+      if (arrow.vx > 2) {
+        arrow.isShot = true;
+      } else {
+        resetArrow();
+      }
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // टारगेट (बोर्ड) को ऊपर नीचे हिलाना
+      target.y += target.speed;
+      if (target.y - target.radius < 0 || target.y + target.radius > canvas.height) {
+        target.speed *= -1;
+      }
+
+      // टारगेट ड्रा करना (🎯 लुक)
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'red'; ctx.fill();
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = 'white'; ctx.fill();
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = 'yellow'; ctx.fill();
+
+      // तीर की मूवमेंट संभालना
+      if (arrow.isShot) {
+        arrow.x += arrow.vx;
+        arrow.y += arrow.vy;
+
+        // चेक करना कि क्या तीर टारगेट से टकराया
+        let dist = Math.hypot(arrow.x - target.x, arrow.y - target.y);
+        if (dist < target.radius && arrow.x < target.x + 10) {
+          score += 10;
+          resetArrow();
+        }
+
+        // स्क्रीन से बाहर जाने पर रीसेट
+        if (arrow.x > canvas.width || arrow.y < 0 || arrow.y > canvas.height) {
+          resetArrow();
+        }
+      }
+
+      // धनुष और तीर ड्रा करना
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#f8fafc';
+      if (!arrow.isShot) {
+        // धनुष की कमान
+        ctx.beginPath();
+        ctx.arc(30, 200, 40, -Math.PI/2, Math.PI/2);
+        ctx.stroke();
+        // तीर
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(arrow.x, arrow.y - 2, 35, 4);
+      } else {
+        // उड़ता हुआ तीर
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(arrow.x, arrow.y - 2, 35, 4);
+      }
+
+      // स्कोर बोर्ड दिखाना
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText("स्कोर: " + score, 20, 30);
+
+      animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    // PWA Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
   </script>
-
 </body>
 </html>
+
