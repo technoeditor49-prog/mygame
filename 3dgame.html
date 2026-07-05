@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🏰 3D Palace Shooter (Single App)</title>
+  <style>
+    /* पूरे पेज को गेमिंग स्क्रीन बनाना */
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; }
+    
+    /* 3D स्क्रीन */
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+
+    /* 🎮 इंडियन गेम स्टाइल UI कंट्रोल्स (3D स्क्रीन के ऊपर दिखेंगे) */
+    .gaming-ui {
+      position: absolute; bottom: 20px; left: 0; width: 100%;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 0 20px; box-sizing: border-box; z-index: 10; pointer-events: none;
+    }
+
+    .steering-side, .actions-side { display: flex; gap: 15px; pointer-events: auto; }
+    .actions-side { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    /* बड़े गेमिंग बटन्स */
+    .game-ui-btn {
+      background: linear-gradient(135deg, #1e293b, #334155);
+      color: white; border: 2px solid #475569; border-radius: 18px;
+      font-size: 1.4rem; font-weight: bold; width: 70px; height: 65px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      cursor: pointer; user-select: none; box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+    }
+    .game-ui-btn:active { background: #0f172a; transform: scale(0.92); }
+
+    .race-btn { background: linear-gradient(135deg, #16a34a, #15803d); border-color: #22c55e; }
+    .brake-btn { background: linear-gradient(135deg, #dc2626, #b91c1c); border-color: #ef4444; }
+    
+    /* बड़ा फायर बटन */
+    .fire-ui-btn {
+      grid-column: span 2; background: linear-gradient(135deg, #ea580c, #c2410c);
+      border: 3px solid #f97316; height: 50px; border-radius: 25px;
+      font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    /* स्कोर बोर्ड */
+    #score-board {
+      position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6);
+      padding: 10px 20px; border-radius: 10px; color: #fbbf24;
+      font-weight: bold; font-size: 1.2rem; z-index: 10; border: 1px solid #fbbf24;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- स्कोर बोर्ड -->
+  <div id="score-board">एनिमी बचे: <span id="enemy-count">3</span></div>
+
+  <!-- 3D गेम विंडो (Three.js यहाँ लोड होगा) -->
+  <div id="canvas-container"></div>
+
+  <!-- 🎮 गेमिंग कंट्रोल्स बटन -->
+  <div class="gaming-ui">
+    <!-- लेफ्ट साइड: मुड़ने के बटन्स -->
+    <div class="steering-side">
+      <div class="game-ui-btn" id="btn-left">◀️</div>
+      <div class="game-ui-btn" id="btn-right">▶️</div>
+    </div>
+
+    <!-- राइट साइड: रेस, ब्रेक और फायर -->
+    <div class="actions-side">
+      <div class="game-ui-btn brake-btn" id="btn-down">🔽<br><span style="font-size:0.55rem;">BREAK</span></div>
+      <div class="game-ui-btn race-btn" id="btn-up">🔼<br><span style="font-size:0.55rem;">RACE</span></div>
+      <div class="game-ui-btn fire-ui-btn" id="btn-fire">💥 FIRE 🔫</div>
+    </div>
+  </div>
+
+  <!-- 🚀 यहाँ Three.js लाइब्रेरी लोड हो रही है -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // --- 1. THREE.JS बेसिक सेटअप ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a); // डार्क नाइट स्काई
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // लाइट्स (रोशनी)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
+
+    // --- 2. 3D वर्ल्ड बनाना (महल और फर्श) ---
+    // 3D फर्श (महल का ग्राउंड)
+    const floorGeo = new THREE.PlaneGeometry(40, 40);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, side: THREE.DoubleSide });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    // महल की 3D दीवारें बनाने का फंक्शन
+    function createWall(w, h, d, x, z) {
+      const wallGeo = new THREE.BoxGeometry(w, h, d);
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+      const wall = new THREE.Mesh(wallGeo, wallMat);
+      wall.position.set(x, h/2, z);
+      scene.add(wall);
+    }
+    // महल का बॉर्डर और अंदर के कमरे की दीवारें
+    createWall(40, 4, 1, 0, -20); // पीछे की दीवार
+    createWall(1, 4, 40, -20, 0); // बाईं दीवार
+    createWall(1, 4, 40, 20, 0);  // दाईं दीवार
+    createWall(15, 4, 1, -10, 0); // अंदर की दीवार 1
+    createWall(1, 4, 15, 5, -5);  // अंदर की दीवार 2
+
+    // --- 3. प्लेयर (आपका 3D कार्टून कैरेक्टर) ---
+    // प्लेयर को एक चमकदार पीले गोले (Sphere) के रूप में डिज़ाइन किया है
+    const playerGeo = new THREE.SphereGeometry(0.6, 16, 16);
+    const playerMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24 });
+    const player = new THREE.Mesh(playerGeo, playerMat);
+    player.position.set(0, 0.6, 15); // शुरुआती पोजीशन
+    scene.add(player);
+
+    // प्लेयर की बंदूक (3D छोटा सिलेंडर)
+    const gunGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8);
+    const gunMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const gun = new THREE.Mesh(gunGeo, gunMat);
+    gun.rotation.x = Math.PI / 2;
+    gun.position.set(0, 0, -0.6);
+    player.add(gun); // बंदूक को प्लेयर के साथ जोड़ दिया
+
+    // --- 4. 3D एनिमी (दुश्मन लाल रंग के बक्से) ---
+    let enemies = [];
+    function spawnEnemy(x, z) {
+      const enemyGeo = new THREE.BoxGeometry(1, 1, 1);
+      const enemyMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+      const enemy = new THREE.Mesh(enemyGeo, enemyMat);
+      enemy.position.set(x, 0.5, z);
+      scene.add(enemy);
+      enemies.push({ mesh: enemy, vx: (Math.random() - 0.5) * 0.05, vz: (Math.random() - 0.5) * 0.05 });
+    }
+    spawnEnemy(-10, -10);
+    spawnEnemy(10, -12);
+    spawnEnemy(12, 5);
+
+    // गोलियों (Bullets) की लिस्ट
+    let bullets = [];
+
+    // --- 5. 3D इनपुट कंट्रोल्स (बटन ट्रैकिंग) ---
+    let keys = { up: false, down: false, left: false, right: false };
+    function bindBtn(id, prop) {
+      const btn = document.getElementById(id);
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[prop] = true; });
+      btn.addEventListener('touchend', () => { keys[prop] = false; });
+    }
+    bindBtn('btn-up', 'up');
+    bindBtn('btn-down', 'down');
+    bindBtn('btn-left', 'left');
+    bindBtn('btn-right', 'right');
+
+    // 🔫 3D शूटिंग फायर बटन लॉजिक
+    document.getElementById('btn-fire').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      // प्लेयर जिस दिशा में देख रहा है, उधर 3D गोली पैदा होगी
+      const bGeo = new THREE.SphereGeometry(0.15, 8, 8);
+      const bMat = new THREE.MeshBasicMaterial({ color: 0xff3366 });
+      const bullet = new THREE.Mesh(bGeo, bMat);
+      bullet.position.set(player.position.x, player.position.y, player.position.z);
+      
+      // दिशा तय करना
+      let speed = 0.3;
+      let vx = Math.sin(player.rotation.y) * -speed;
+      let vz = Math.cos(player.rotation.y) * -speed;
+
+      scene.add(bullet);
+      bullets.push({ mesh: bullet, vx: vx, vz: vz, life: 60 });
+    });
+
+    // --- 6. मुख्य 3D गेम लूप (एनीमेशन) ---
+    let playerSpeed = 0.12;
+    let turnSpeed = 0.04;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // कैरेक्टर रोटेशन (मुड़ना)
+      if (keys.left) player.rotation.y += turnSpeed;
+      if (keys.right) player.rotation.y -= turnSpeed;
+
+      // कैरेक्टर मूवमेंट (RACE और BREAK)
+      if (keys.up) { // आगे बढ़ना (Race)
+        player.position.x += Math.sin(player.rotation.y) * -playerSpeed;
+        player.position.z += Math.cos(player.rotation.y) * -playerSpeed;
+      }
+      if (keys.down) { // पीछे हटना (Brake)
+        player.position.x -= Math.sin(player.rotation.y) * -playerSpeed;
+        player.position.z -= Math.cos(player.rotation.y) * -playerSpeed;
+      }
+
+      // 🎥 3D कैमरा प्लेयर के पीछे-पीछे चलेगा (GTA/Indian Vehicles Style)
+      camera.position.x = player.position.x + Math.sin(player.rotation.y) * 6;
+      camera.position.z = player.position.z + Math.cos(player.rotation.y) * 6;
+      camera.position.y = player.position.y + 3.5; // थोड़ा ऊपर से व्यू
+      camera.lookAt(player.position);
+
+      // 3D गोलियों को आगे बढ़ाना
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        let b = bullets[i];
+        b.mesh.position.x += b.vx;
+        b.mesh.position.z += b.vz;
+        b.life--;
+
+        // गोली और दुश्मन की टक्कर चेक करना
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          let e = enemies[j];
+          let dist = b.mesh.position.distanceTo(e.mesh.position);
+          if (dist < 0.8) {
+            scene.remove(e.mesh);
+            enemies.splice(j, 1);
+            scene.remove(b.mesh);
+            bullets.splice(i, 1);
+            document.getElementById('enemy-count').innerText = enemies.length;
+            break;
+          }
+        }
+
+        // पुरानी गोलियों को हटाना
+        if (b.life <= 0 && bullets[i]) {
+          scene.remove(b.mesh);
+          bullets.splice(i, 1);
+        }
+      }
+
+      // दुश्मनों का मूवमेंट और प्लेयर से टक्कर
+      enemies.forEach(e => {
+        e.mesh.position.x += e.vx;
+        e.mesh.position.z += e.vz;
+
+        // बाउंड्री से टकराने पर दिशा बदलना
+        if (Math.abs(e.mesh.position.x) > 19) e.vx *= -1;
+        if (Math.abs(e.mesh.position.z) > 19) e.vz *= -1;
+
+        // क्या दुश्मन प्लेयर से टकराया?
+        if (player.position.distanceTo(e.mesh.position) < 1.0) {
+          alert("😢 गेम ओवर! दुश्मन ने आपको महल में पकड़ लिया।");
+          player.position.set(0, 0.6, 15); // रिस्पॉन
+        }
+      });
+
+      // जीत की जांच
+      if (enemies.length === 0) {
+        alert("🏆 गज़ब अभिनंदन! आपने 3D महल के सारे दुश्मनों को खत्म कर दिया!");
+        location.reload();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // स्क्रीन साइज बदलने पर एडजस्ट करना
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>
