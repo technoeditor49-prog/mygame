@@ -89,13 +89,36 @@
       background-color: var(--card-bg); color: var(--text-color); border: 1px solid rgba(255,255,255,0.1);
       padding: 15px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; text-align: center; cursor: pointer;
     }
+
+    /* 🆕 नए गेमिंग लोगो की CSS (सही जगह पर) */
+    .game-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      font-size: 2.2rem;
+      animation: float 2s ease-in-out infinite alternate;
+    }
+    .logo-text {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #38bdf8;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+      font-family: 'Impact', 'Arial Black', sans-serif;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-5px) rotate(10deg); }
+    }
   </style>
 </head>
 <body>
 
   <div id="splash-screen"><div class="splash-text">🚀 Pro Game</div></div>
 
-    <div class="container" id="main-menu">
+  <div class="container" id="main-menu">
     <div class="header">
       <div class="game-logo">
         <span class="logo-icon">🎮</span>
@@ -103,7 +126,6 @@
       </div>
       <button class="theme-btn" id="theme-toggle">☀️ लाइट मोड</button>
     </div>
-
     <div class="mission-box">
       <h3 style="margin:0 0 10px 0;">मेरा मिशन: ऐप डेवलपर बनना</h3>
       <p style="margin:0;">गेम्स पर टैप करें और अंदर जाकर सीधे खेलें!</p>
@@ -121,7 +143,6 @@
   <div class="game-screen" id="game-container">
     <button class="back-btn" onclick="closeGame()">⬅ Back to Menu</button>
     <h2 id="game-title" style="margin-bottom: 15px;">खेलिए</h2>
-    
     <div id="game-play-area"></div>
   </div>
 
@@ -208,7 +229,6 @@
         target.y += target.speed;
         if (target.y - target.radius < 10 || target.y + target.radius > canvas.height - 10) target.speed *= -1;
 
-        // 🎯 टारगेट
         ctx.beginPath(); ctx.arc(target.x, target.y, target.radius, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill();
         ctx.beginPath(); ctx.arc(target.x, target.y, target.radius*0.6, 0, Math.PI*2); ctx.fillStyle = '#ffffff'; ctx.fill();
 
@@ -218,7 +238,6 @@
           if (arrow.x > canvas.width || arrow.y < 0 || arrow.y > canvas.height) resetArrow();
         }
 
-        // 🏹 धनुष-तीर
         ctx.lineWidth = 4; ctx.strokeStyle = '#64748b'; ctx.beginPath(); ctx.arc(40, 190, 50, -Math.PI/2, Math.PI/2); ctx.stroke();
         ctx.fillStyle = '#38bdf8'; ctx.fillRect(arrow.x, arrow.y - 2, 35, 4);
         
@@ -292,15 +311,11 @@
       function loop(time) {
         if (activeGame !== 'snake') return;
         animationFrameId = requestAnimationFrame(loop);
-        if (time - lastTime < 150) return; // सांप की स्पीड कंट्रोल
+        if (time - lastTime < 150) return;
         lastTime = time;
 
         ctx.fillStyle = '#1e293b'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        
-        // भोजन ड्रा करें
         ctx.fillStyle = '#ef4444'; ctx.fillRect(food.x, food.y, box, box);
-
-        // सांप ड्रा करें
         snake.forEach((part, i) => { ctx.fillStyle = i===0?'#eab308':'#10b981'; ctx.fillRect(part.x, part.y, box, box); });
 
         let headX = snake[0].x; let headY = snake[0].y;
@@ -319,28 +334,7 @@
         snake.unshift(newHead);
       }
       animationFrameId = requestAnimationFrame(loop);
-    }     .game-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
-    .logo-icon {
-      font-size: 2.2rem;
-      animation: float 2s ease-in-out infinite alternate;
-    }
-    .logo-text {
-      font-size: 1.8rem;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #38bdf8;
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
-      font-family: 'Impact', 'Arial Black', sans-serif;
-    }
-    @keyframes float {
-      0% { transform: translateY(0px) rotate(0deg); }
-      100% { transform: translateY(-5px) rotate(10deg); }
-    }
-
   </script>
 </body>
 </html>
