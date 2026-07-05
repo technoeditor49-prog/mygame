@@ -67,7 +67,7 @@
       box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); box-sizing: border-box;
     }
 
-    /* 3. गेम स्क्रीन एरिया */
+    /* 3. गेम स्क्रीन AREA */
     .game-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; margin-top: 20px; }
     .back-btn {
       align-self: flex-start; background-color: var(--card-bg); color: var(--text-color);
@@ -90,21 +90,11 @@
       padding: 15px; border-radius: 50%; font-size: 1.2rem; font-weight: bold; text-align: center; cursor: pointer;
     }
 
-    /* 🆕 नए गेमिंग लोगो की CSS (सही जगह पर) */
-    .game-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .logo-icon {
-      font-size: 2.2rem;
-      animation: float 2s ease-in-out infinite alternate;
-    }
+    /* नए गेमिंग लोगो की CSS */
+    .game-logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 2.2rem; animation: float 2s ease-in-out infinite alternate; }
     .logo-text {
-      font-size: 1.8rem;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #38bdf8;
+      font-size: 1.8rem; font-weight: 900; letter-spacing: 2px; color: #38bdf8;
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
       font-family: 'Impact', 'Arial Black', sans-serif;
     }
@@ -147,6 +137,86 @@
   </div>
 
   <script>
+    // 🔊 साउंड सिस्टम (Web Audio API)
+    let bgMusicInterval = null;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      try {
+        initAudio();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          oscillator.start();
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+          oscillator.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'success') {
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+          gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          oscillator.start();
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+          oscillator.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'gameover') {
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(280, audioCtx.currentTime);
+          oscillator.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 0.4);
+          gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          oscillator.start();
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+      } catch (e) { console.log(e); }
+    }
+
+    // 🎵 गेम के अंदर का निरंतर बैकग्राउंड म्यूज़िक जनरेटर
+    function startBackgroundMusic() {
+      initAudio();
+      if (bgMusicInterval) clearInterval(bgMusicInterval);
+
+      let notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00]; // गेमिंग सुर नोट्स
+      let step = 0;
+
+      bgMusicInterval = setInterval(() => {
+        try {
+          if (audioCtx.state === 'suspended') return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          osc.type = 'triangle'; // सॉफ्ट गेम टोन
+          osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // एकदम हल्का बैकग्राउंड वॉल्यूम
+          
+          osc.start();
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+          osc.stop(audioCtx.currentTime + 0.3);
+          step++;
+        } catch(e) {}
+      }, 350); // हर 350ms पर एक हल्की बीट बजेगी
+    }
+
+    function stopBackgroundMusic() {
+      if (bgMusicInterval) {
+        clearInterval(bgMusicInterval);
+        bgMusicInterval = null;
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const splash = document.getElementById('splash-screen');
@@ -156,6 +226,7 @@
 
     const toggleBtn = document.getElementById('theme-toggle');
     toggleBtn.addEventListener('click', () => {
+      playSound('click');
       if (document.body.hasAttribute('data-theme')) {
         document.body.removeAttribute('data-theme'); toggleBtn.innerText = '☀️ लाइट मोड';
       } else {
@@ -170,6 +241,8 @@
     let activeGame = ''; let animationFrameId;
 
     function openGame(gameName) {
+      playSound('click');
+      startBackgroundMusic(); // 🎵 गेम खोलते ही बैकग्राउंड म्यूज़िक चालू!
       mainMenu.style.display = 'none'; gameContainer.style.display = 'flex';
       activeGame = gameName; playArea.innerHTML = '';
       
@@ -193,6 +266,8 @@
     }
 
     function closeGame() {
+      playSound('click');
+      stopBackgroundMusic(); // 🎵 मेन्यू में वापस आते ही बैकग्राउंड म्यूज़िक बंद!
       gameContainer.style.display = 'none'; mainMenu.style.display = 'flex';
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       activeGame = '';
@@ -218,7 +293,7 @@
         const touch = e.changedTouches[0]; const rect = canvas.getBoundingClientRect();
         let endX = touch.clientX - rect.left; let endY = touch.clientY - rect.top;
         arrow.vx = (startX - endX) * 0.2; arrow.vy = (startY - endY) * 0.2;
-        if (startX - endX > 15) arrow.isShot = true; else resetArrow();
+        if (startX - endX > 15) { arrow.isShot = true; playSound('click'); } else resetArrow();
       });
 
       function resetArrow() { arrow.x = 60; arrow.y = 190; arrow.vx = 0; arrow.vy = 0; arrow.isShot = false; }
@@ -234,7 +309,9 @@
 
         if (arrow.isShot) {
           arrow.x += arrow.vx; arrow.y += arrow.vy;
-          if (Math.hypot(arrow.x + 35 - target.x, arrow.y - target.y) < target.radius) { score += 10; resetArrow(); }
+          if (Math.hypot(arrow.x + 35 - target.x, arrow.y - target.y) < target.radius) { 
+            score += 10; playSound('success'); resetArrow(); 
+          }
           if (arrow.x > canvas.width || arrow.y < 0 || arrow.y > canvas.height) resetArrow();
         }
 
@@ -256,10 +333,11 @@
         const cell = document.createElement('div'); cell.className = 'cell';
         cell.addEventListener('click', () => {
           if(cells[i] !== '' || checkXOWin(cells)) return;
+          playSound('click');
           cells[i] = currentPlayer; cell.innerText = currentPlayer;
           cell.style.color = currentPlayer === 'X' ? '#f43f5e' : '#eab308';
-          if(checkXOWin(cells)) { status.innerText = `🎉 खिलाड़ी ${currentPlayer} जीता!`; return; }
-          if(!cells.includes('')) { status.innerText = '🤝 मैच ड्रॉ हुआ!'; return; }
+          if(checkXOWin(cells)) { playSound('success'); status.innerText = `🎉 खिलाड़ी ${currentPlayer} जीता!`; return; }
+          if(!cells.includes('')) { playSound('gameover'); status.innerText = '🤝 मैच ड्रॉ हुआ!'; return; }
           currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; status.innerText = `बारी: ${currentPlayer}`;
         });
         board.appendChild(cell);
@@ -284,8 +362,9 @@
             const emptyIdx = nums.indexOf('');
             const validMoves = [i-1, i+1, i-3, i+3];
             if(validMoves.includes(emptyIdx)) {
+              playSound('click');
               nums[emptyIdx] = num; nums[i] = ''; render();
-              if(nums.join(',') === '1,2,3,4,5,6,7,8,') alert('🎉 अद्भुत! आपने नंबर चैलेंज जीत लिया!');
+              if(nums.join(',') === '1,2,3,4,5,6,7,8,') { playSound('success'); alert('🎉 अद्भुत! आपने नंबर चैलेंज जीत लिया!'); }
             }
           });
           board.appendChild(cell);
@@ -304,6 +383,7 @@
       let score = 0; let lastTime = 0;
 
       changeSnakeDir = function(newDir) {
+        playSound('click');
         if(newDir==='UP' && dir!=='DOWN') dir='UP'; if(newDir==='DOWN' && dir!=='UP') dir='DOWN';
         if(newDir==='LEFT' && dir!=='RIGHT') dir='LEFT'; if(newDir==='RIGHT' && dir!=='LEFT') dir='RIGHT';
       };
@@ -324,11 +404,13 @@
 
         if(headX === food.x && headY === food.y) {
           score += 5; scoreBox.innerText = "स्कोर: " + score;
+          playSound('success');
           food = { x: Math.floor(Math.random()*19)*box, y: Math.floor(Math.random()*19)*box };
         } else { snake.pop(); }
 
         let newHead = {x: headX, y: headY};
         if(headX<0 || headX>=canvas.width || headY<0 || headY>=canvas.height || snake.some(p=>p.x===newHead.x && p.y===newHead.y)) {
+          playSound('gameover');
           alert('😢 गेम ओवर! स्कोर: ' + score); closeGame(); return;
         }
         snake.unshift(newHead);
